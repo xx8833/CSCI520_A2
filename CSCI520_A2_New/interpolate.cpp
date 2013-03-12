@@ -22,6 +22,18 @@ int main(int argc, char **argv) {
 	Interpolator::Euler2Rotation(R2, R);
 	Interpolator::Rotation2Euler(R, R2);
 
+	vector v1(0,0,0);
+	vector v2(0,1,0);
+	vector v3(1,1,0);
+	vector v4(1,0,0);
+	vector iv;
+	iv = Interpolator::DeCasteljauEuler(0.5, v1, v2, v3, v4);
+	iv = Interpolator::DeCasteljauEuler(0.0, v1, v2, v3, v4);
+	iv = Interpolator::DeCasteljauEuler(1.0, v1, v2, v3, v4);
+	iv = Interpolator::DeCasteljauEuler(0.1, v1, v2, v3, v4);
+
+
+
 	if (argc != 7) {
 		printf("Interpolates motion capture data.");
 		printf(

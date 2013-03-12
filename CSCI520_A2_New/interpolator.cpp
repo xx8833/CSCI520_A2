@@ -166,9 +166,14 @@ Quaternion<double> Interpolator::Double(Quaternion<double> p,
 vector Interpolator::DeCasteljauEuler(double t, vector p0, vector p1, vector p2,
 		vector p3)
 {
-	// students should implement this
-	vector result;
-	return result;
+	vector temp1,temp2,temp3;
+	temp1 = p0 * (1-t) + p1 * t;
+	temp2 = p1 * (1-t) + p2 * t;
+	temp3 = p2 * (1-t) + p3 * t;
+	temp1 = temp1 * (1-t) + temp2 * t;
+	temp2 = temp2 * (1-t) + temp3 * t;
+	temp1 = temp1 * (1-t) + temp2 * t;
+	return temp1;
 }
 
 Quaternion<double> Interpolator::DeCasteljauQuaternion(double t,
