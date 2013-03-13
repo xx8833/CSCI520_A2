@@ -13,6 +13,7 @@
 #include "motion.h"
 #include "quaternion.h"
 
+
 enum InterpolationType {
 	LINEAR = 0, BEZIER = 1
 };

@@ -55,6 +55,7 @@
 #include <stdio.h>
 #include <math.h>
 
+
 // forward declarations for the friend template
 template<typename real> class Quaternion;
 template<typename real> Quaternion<real> operator*(real alpha,
