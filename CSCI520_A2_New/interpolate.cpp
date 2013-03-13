@@ -33,7 +33,6 @@ int main(int argc, char **argv) {
 	iv = Interpolator::DeCasteljauEuler(0.1, v1, v2, v3, v4);
 
 
-
 	if (argc != 7) {
 		printf("Interpolates motion capture data.");
 		printf(

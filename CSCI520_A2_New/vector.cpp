@@ -80,3 +80,7 @@ double angle(vector const& a, vector const& b) {
 	return acos((a % b) / (len(a) * len(b)));
 }
 
+vector Lerp(vector start,vector end,double t)
+{
+	return start * (1-t) + end * t;
+}

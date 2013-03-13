@@ -122,7 +122,109 @@ void Interpolator::Euler2Rotation(double angles[3], double R[9])
 void Interpolator::BezierInterpolationEuler(Motion *pInputMotion,
 		Motion *pOutputMotion, int N)
 {
-	// students should implement this
+	int inputLength = pInputMotion->GetNumFrames(); // frames are indexed 0, ..., inputLength-1
+
+	// keyframe ID (n) starts from 1
+	// frame number starts from 0
+	// frame number 0 ..N.. 31 ..N.. 62 ..
+	// keyframe ID  1       2        3  ..
+	int maxKeyFrameID = inputLength / (N+1) + 1;
+	if(maxKeyFrameID <= 3)
+		throw "Too less key frames to do Interpolate" ;
+	for(int keyFrameID = 1 ; keyFrameID < maxKeyFrameID ; keyFrameID ++ )
+	{
+		int startKeyframe = (keyFrameID - 1) * (N + 1);
+		int endKeyframe = startKeyframe + N + 1;
+		// q_n
+		Posture *startPosture = pInputMotion->GetPosture(startKeyframe);
+		// q_(n+1)
+		Posture *endPosture = pInputMotion->GetPosture(endKeyframe);
+
+		// copy start and end keyframe
+		pOutputMotion->SetPosture(startKeyframe, *startPosture);
+		pOutputMotion->SetPosture(endKeyframe, *endPosture);
+
+		// interpolate in between
+		for (int frame = 1; frame <= N; frame++) {
+			Posture interpolatedPosture;
+			double t = 1.0 * frame / (N + 1);
+
+			// interpolate root position
+			// a_n,b_(n+1)
+			vector a,b;
+			// p_(n-1),p_n,p_(n+1),p_(n+2)
+			vector p0,p1,p2,p3;
+			p1 = startPosture->root_pos;
+			p2 = endPosture->root_pos;
+
+			if(keyFrameID == 1)
+			{
+				p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->root_pos;
+				a = Lerp(p1,Lerp(p3, p2, 2),1.0/3);
+			}
+			else
+			{
+				p0 = pInputMotion->GetPosture(startKeyframe - N - 1)->root_pos;
+				// (a_n)_
+				vector a_ = Lerp(Lerp(p0, p1, 2), p2, 0.5);
+				a = Lerp(p1, a_, 1.0/3);
+			}
+			if(keyFrameID == maxKeyFrameID - 1)
+				b = Lerp(p2, Lerp(p0, p1, 2),1.0/3);
+			else
+			{
+				p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->root_pos;
+				// (a_n+1)_
+				vector a_1 = Lerp(Lerp(p1, p2, 2), p3, 0.5);
+				b = Lerp(p2, a_1, -1.0/3);
+			}
+			interpolatedPosture.root_pos = DeCasteljauEuler(t, p1, a, b, p2);
+
+			// interpolate bone rotations
+			for (int bone = 0; bone < MAX_BONES_IN_ASF_FILE; bone++)
+			{
+				// interpolate bone rotation
+				// a_n,b_(n+1)
+				vector a,b;
+				// p_(n-1),p_n,p_(n+1),p_(n+2)
+				vector p0,p1,p2,p3;
+				p1 = startPosture->bone_rotation[bone];
+				p2 = endPosture->bone_rotation[bone];
+
+				if(keyFrameID == 1)
+				{
+					p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->bone_rotation[bone];
+					a = Lerp(p1,Lerp(p3, p2, 2),1.0/3);
+				}
+				else
+				{
+					p0 = pInputMotion->GetPosture(startKeyframe - N - 1)->bone_rotation[bone];
+					// (a_n)_
+					vector a_ = Lerp(Lerp(p0, p1, 2), p2, 0.5);
+					a = Lerp(p1, a_, 1.0/3);
+				}
+				if(keyFrameID == maxKeyFrameID - 1)
+					b = Lerp(p2, Lerp(p0, p1, 2),1.0/3);
+				else
+				{
+					p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->bone_rotation[bone];
+					// (a_n+1)_
+					vector a_1 = Lerp(Lerp(p1, p2, 2), p3, 0.5);
+					b = Lerp(p2, a_1, -1.0/3);
+				}
+				interpolatedPosture.bone_rotation[bone] = DeCasteljauEuler(t, p1, a, b, p2);
+
+
+			}
+
+			pOutputMotion->SetPosture(startKeyframe + frame,
+					interpolatedPosture);
+		}
+
+	}
+
+	for (int frame = (maxKeyFrameID - 1)  * (N + 1) + 1; frame < inputLength; frame++)
+		pOutputMotion->SetPosture(frame, *(pInputMotion->GetPosture(frame)));
 }
 
 void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
@@ -166,14 +268,12 @@ Quaternion<double> Interpolator::Double(Quaternion<double> p,
 vector Interpolator::DeCasteljauEuler(double t, vector p0, vector p1, vector p2,
 		vector p3)
 {
-	vector temp1,temp2,temp3;
-	temp1 = p0 * (1-t) + p1 * t;
-	temp2 = p1 * (1-t) + p2 * t;
-	temp3 = p2 * (1-t) + p3 * t;
-	temp1 = temp1 * (1-t) + temp2 * t;
-	temp2 = temp2 * (1-t) + temp3 * t;
-	temp1 = temp1 * (1-t) + temp2 * t;
-	return temp1;
+	vector temp1 = Lerp(p0, p1, t);
+	vector temp2 = Lerp(p1, p2, t);
+	vector temp3 = Lerp(p2, p3, t);
+	temp1 = Lerp(temp1, temp2, t);
+	temp2 = Lerp(temp2, temp3, t);
+	return Lerp(temp1, temp2, t);
 }
 
 Quaternion<double> Interpolator::DeCasteljauQuaternion(double t,

@@ -118,5 +118,7 @@ public:
 	double p[3]; //X, Y, Z components of the vector
 };
 
+vector Lerp(vector start,vector end,double t);
+
 #endif
 
