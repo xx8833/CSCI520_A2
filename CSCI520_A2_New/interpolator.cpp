@@ -241,28 +241,43 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 
 void Interpolator::Euler2Quaternion(double angles[3], Quaternion<double> & q)
 {
-	// students should implement this
+	double Rotation[9];
+	Euler2Rotation(angles, Rotation);
+	q.Matrix2Quaternion(Rotation);
 }
 
 void Interpolator::Quaternion2Euler(Quaternion<double> & q, double angles[3])
 {
-	// students should implement this
+	double Rotation[9];
+	q.Quaternion2Matrix(Rotation);
+	Rotation2Euler(Rotation, angles);
 }
 
-Quaternion<double> Interpolator::Slerp(double t, Quaternion<double> & qStart,
-		Quaternion<double> & qEnd_)
+// Reference: Physically based Rendering from theory to implementation 2nd
+Quaternion<double> Interpolator::Slerp(Quaternion<double>  & qStart, Quaternion<double>  & qEnd, double t)
 {
-	// students should implement this
 	Quaternion<double> result;
+	double cosTheta = qStart.Gets() * qEnd.Gets() + qStart.Getx() * qEnd.Getx()
+			+ qStart.Gety() * qEnd.Gety()+ qStart.Getz() * qEnd.Getz() ;
+
+	// avoid dividing by zero
+	if(cosTheta > 0.9995)
+	{
+		result = (1-t) * qStart + t * qEnd;
+	}
+	else
+	{
+		double theta = acos(cosTheta);
+		result = sin((1-t)*theta)/sin(theta) * qStart + sin(t*theta)/sin(theta) * qEnd;
+	}
+	result.Normalize();
 	return result;
 }
 
 Quaternion<double> Interpolator::Double(Quaternion<double> p,
 		Quaternion<double> q)
 {
-	// students should implement this
-	Quaternion<double> result;
-	return result;
+	return Slerp(p, q, 2.0);
 }
 
 vector Interpolator::DeCasteljauEuler(double t, vector p0, vector p1, vector p2,
@@ -280,8 +295,11 @@ Quaternion<double> Interpolator::DeCasteljauQuaternion(double t,
 		Quaternion<double> p0, Quaternion<double> p1, Quaternion<double> p2,
 		Quaternion<double> p3)
 {
-	// students should implement this
-	Quaternion<double> result;
-	return result;
+	Quaternion<double> temp1 = Slerp(p1, p0,t);
+	Quaternion<double> temp2 = Slerp(p2, p1,t);
+	Quaternion<double> temp3 = Slerp(p3, p2,t);
+	temp1 = Slerp(temp2, temp1 ,t);
+	temp2 = Slerp(temp2, temp3, t);
+	return Slerp(temp1, temp2, t);
 }
 

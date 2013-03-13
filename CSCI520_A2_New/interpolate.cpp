@@ -15,6 +15,7 @@
 
 int main(int argc, char **argv) {
 
+	/*
 	double R[9],R2[3];
 	R2[0] = 12.1;
 	R2[1] = 19.0;
@@ -31,6 +32,7 @@ int main(int argc, char **argv) {
 	iv = Interpolator::DeCasteljauEuler(0.0, v1, v2, v3, v4);
 	iv = Interpolator::DeCasteljauEuler(1.0, v1, v2, v3, v4);
 	iv = Interpolator::DeCasteljauEuler(0.1, v1, v2, v3, v4);
+	*/
 
 
 	if (argc != 7) {

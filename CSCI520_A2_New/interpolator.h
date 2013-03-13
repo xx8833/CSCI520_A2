@@ -53,8 +53,7 @@ public:
 	void Quaternion2Euler(Quaternion<double> & q, double angles[3]);
 
 	// quaternion interpolation
-	Quaternion<double> Slerp(double t, Quaternion<double> & qStart,
-			Quaternion<double> & qEnd);
+	Quaternion<double> Slerp(Quaternion<double>  & qStart, Quaternion<double>  & qEnd, double t);
 	Quaternion<double> Double(Quaternion<double> p, Quaternion<double> q);
 
 	// interpolation routines
@@ -68,9 +67,9 @@ public:
 			Motion * pOutputMotion, int N);
 
 	// Bezier spline evaluation
-	static vector DeCasteljauEuler(double t, vector p0, vector p1, vector p2,
+	vector DeCasteljauEuler(double t, vector p0, vector p1, vector p2,
 			vector p3); // evaluate Bezier spline at t, using DeCasteljau construction, vector version
-	static Quaternion<double> DeCasteljauQuaternion(double t, Quaternion<double> p0,
+	Quaternion<double> DeCasteljauQuaternion(double t, Quaternion<double> p0,
 			Quaternion<double> p1, Quaternion<double> p2,
 			Quaternion<double> p3); // evaluate Bezier spline at t, using DeCasteljau construction, Quaternion version
 
