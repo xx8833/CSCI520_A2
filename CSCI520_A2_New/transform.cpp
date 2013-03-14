@@ -7,6 +7,7 @@
  */
 #include <cmath>
 #include <cstdio>
+#include <string.h>
 #include "transform.h"
 #include "types.h"
 
@@ -120,6 +121,25 @@ void rotationX(double r[][4], double a) {
 	r[3][3] = 1;
 }
 
+void translate(double r[][4], double x, double y, double z) {
+	r[0][0] = 1;
+	r[0][1] = 0;
+	r[0][2] = 0;
+	r[0][3] = x;
+	r[1][0] = 0;
+	r[1][1] = 1;
+	r[1][2] = 0;
+	r[1][3] = y;
+	r[2][0] = 0;
+	r[2][1] = 0;
+	r[2][2] = 1;
+	r[2][3] = z;
+	r[3][0] = 0;
+	r[3][1] = 0;
+	r[3][2] = 0;
+	r[3][3] = 1;
+}
+
 void matrix_mult(double a[][4], double b[][4], double c[][4]) {
 	int i, j, k;
 	for (i = 0; i < 4; i++)
@@ -127,6 +147,18 @@ void matrix_mult(double a[][4], double b[][4], double c[][4]) {
 			c[i][j] = 0;
 			for (k = 0; k < 4; k++)
 				c[i][j] += a[i][k] * b[k][j];
+		}
+}
+
+void matrix_multS(double a[][4], double b[][4]) {
+	double copy[4][4];
+	memcpy(copy,a,sizeof(double)*16);
+	int i, j, k;
+	for (i = 0; i < 4; i++)
+		for (j = 0; j < 4; j++) {
+			a[i][j] = 0;
+			for (k = 0; k < 4; k++)
+				a[i][j] += copy[i][k] * b[k][j];
 		}
 }
 

@@ -134,9 +134,8 @@ void Interpolator::BezierInterpolationEuler(Motion *pInputMotion,
 	for (int keyFrameID = 1; keyFrameID < maxKeyFrameID; keyFrameID++) {
 		int startKeyframe = (keyFrameID - 1) * (N + 1);
 		int endKeyframe = startKeyframe + N + 1;
-		// q_n
+		// p_n,p_(n+1)
 		Posture *startPosture = pInputMotion->GetPosture(startKeyframe);
-		// q_(n+1)
 		Posture *endPosture = pInputMotion->GetPosture(endKeyframe);
 
 		// copy start and end keyframe
@@ -231,6 +230,9 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 		Posture *startPosture = pInputMotion->GetPosture(startKeyframe);
 		Posture *endPosture = pInputMotion->GetPosture(endKeyframe);
 
+		Skeleton  *tt =  pInputMotion->GetSkeleton();
+		tt->setPosture(*startPosture);
+		tt->computeBoneEndPos();
 		// copy start and end keyframe
 		pOutputMotion->SetPosture(startKeyframe, *startPosture);
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);

@@ -12,8 +12,15 @@
 
 #include "interpolator.h"
 #include "motion.h"
+#include </Users/zhiyixu/Downloads/armadillo-3.800.1/include/armadillo>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
+	arma::mat A = arma::randu < arma::mat > (4, 5);
+	arma::mat B = arma::randu < arma::mat > (4, 5);
+	A(1, 2) = 87;
+	std::cout << A * B.t() << std::endl;
+	double tr = A(1, 2);
 
 	/*
 	double R[9],R2[3];
@@ -52,12 +59,12 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	char * inputSkeletonFile = argv[1];
-	char * inputMotionCaptureFile = argv[2];
-	char * interpolationTypeString = argv[3];
-	char * angleRepresentationString = argv[4];
-	char * NString = argv[5];
-	char * outputMotionCaptureFile = argv[6];
+	char *inputSkeletonFile = argv[1];
+	char *inputMotionCaptureFile = argv[2];
+	char *interpolationTypeString = argv[3];
+	char *angleRepresentationString = argv[4];
+	char *NString = argv[5];
+	char *outputMotionCaptureFile = argv[6];
 
 	int N = strtol(NString, NULL, 10);
 	if (N < 0) {
@@ -66,8 +73,8 @@ int main(int argc, char **argv) {
 	}
 	printf("N=%d\n", N);
 
-	Skeleton * pSkeleton = NULL;	// skeleton as read from an ASF file (input)
-	Motion * pInputMotion = NULL; // motion as read from an AMC file (input)
+	Skeleton *pSkeleton = NULL;    // skeleton as read from an ASF file (input)
+	Motion *pInputMotion = NULL; // motion as read from an AMC file (input)
 
 	printf("Loading skeleton from %s...\n", inputSkeletonFile);
 	try {
@@ -121,7 +128,7 @@ int main(int argc, char **argv) {
 	interpolator.SetAngleRepresentation(angleRepresentation);
 
 	printf("Interpolating...\n");
-	Motion * pOutputMotion; // interpolated motion (output)
+	Motion *pOutputMotion; // interpolated motion (output)
 	interpolator.Interpolate(pInputMotion, &pOutputMotion, N);
 	if (pOutputMotion == NULL) {
 		printf("Error: interpolation failed. No output generated.\n");

@@ -13,7 +13,7 @@
 #define _SKELETON_H
 
 #include "posture.h"
-
+#include "transform.h"
 // this structure defines the property of each bone segment, including its connection to other bones,
 // DOF (degrees of freedom), relative orientation and distance to the outboard bone 
 struct Bone {
@@ -101,6 +101,15 @@ public:
 
 	int numBonesInSkel(Bone bone);
 	int movBonesInSkel(Bone bone);
+	void computeBoneEndPos()
+	{
+		ComputeRotationToParentCoordSystem(m_pBoneList);
+		double identityMat[4][4];
+		memset(identityMat,0,sizeof(double)*16);
+		for(int i = 0; i < 4; i++)
+			identityMat[i][i] = 1;
+		Traverse(m_pRootBone, identityMat);
+	}
 
 protected:
 
@@ -126,6 +135,70 @@ protected:
 	void compute_rotation_parent_child(Bone *parent, Bone *child);
 	void ComputeRotationToParentCoordSystem(Bone *bone);
 
+	void ProcessBone(Bone *ptr,double transToWorld[4][4],double TransferMatForChild[4][4])
+	{
+		//Transform (rotate) from the local coordinate system of this bone to it's parent
+		//This step corresponds to doing: ModelviewMatrix = M_k * (rot_parent_current)
+		matrix_mult( transToWorld ,  ptr->rot_parent_current , TransferMatForChild);
+
+		double temp[4][4];
+
+		//translate AMC
+		//if(ptr->doftz)
+		//{
+		//	translate(temp,0,0,double(ptr->tz));
+		//	matrix_multS(TransferMatForChild, temp);
+		//}
+		//if(ptr->dofty)
+		//{
+		//	translate(temp,0,double(ptr->ty),0);
+		//	matrix_multS(TransferMatForChild, temp);
+		//}
+		//if(ptr->doftx)
+		//{
+		//	translate(temp,double(ptr->tx),0,0);
+		//	matrix_multS(TransferMatForChild, temp);
+		//}
+
+		//rotate AMC (rarely used)
+		//if(ptr->dofrz)
+		//{
+		//	rotationZ(temp, double(ptr->rz));
+		//	matrix_multS(TransferMatForChild, temp);
+		//}
+		//if(ptr->dofry)
+		//{
+		//	rotationY(temp, double(ptr->ry));
+		//	matrix_multS(TransferMatForChild, temp);
+		//}
+		//if(ptr->dofrx)
+		//{
+		//	rotationX(temp, double(ptr->rx));
+		//	matrix_multS(TransferMatForChild, temp);
+		//}
+
+		//Compute tx, ty, tz : translation from pBone to its child (in local coordinate system of pBone)
+		double tx = ptr->dir[0] * ptr->length;
+		double ty = ptr->dir[1] * ptr->length;
+		double tz = ptr->dir[2] * ptr->length;
+		translate(temp,tx,ty,tz);
+		matrix_multS(TransferMatForChild, temp);
+
+		double rr[3];
+		matrix_transform_affine(TransferMatForChild, 0, 0, 0, rr);
+		printf("id: %d  %lf %lf %lf\n",ptr->idx,rr[0],rr[1],rr[2]);
+	}
+
+	void Traverse(Bone *ptr,double transToWorld[4][4])
+	{
+		if(ptr != 0)
+		{
+			double transToWorldForChild[4][4];
+			ProcessBone(ptr, transToWorld, transToWorldForChild);
+			Traverse(ptr->child, transToWorldForChild);
+			Traverse(ptr->sibling, transToWorld);
+		}
+	}
 	// root position in world coordinate system
 	double m_RootPos[3];
 	double tx, ty, tz;

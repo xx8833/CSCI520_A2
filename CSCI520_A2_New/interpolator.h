@@ -12,6 +12,8 @@
 
 #include "motion.h"
 #include "quaternion.h"
+#include <iostream>
+
 
 
 enum InterpolationType {

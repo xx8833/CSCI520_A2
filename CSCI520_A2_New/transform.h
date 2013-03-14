@@ -13,7 +13,8 @@
 class Matrix {
 
 };
-
+void matrix_multS(double a[][4], double b[][4]) ;
+void translate(double r[][4], double x, double y, double z);
 void matrix_transpose(double a[4][4], double b[4][4]);
 void matrix_print(char *str, double a[4][4]);
 void matrix_transform_affine(double m[4][4], double x, double y, double z,
