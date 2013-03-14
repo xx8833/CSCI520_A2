@@ -460,10 +460,7 @@ void Skeleton::setPosture(Posture posture) {
 	m_RootPos[1] = posture.root_pos.p[1];
 	m_RootPos[2] = posture.root_pos.p[2];
 
-	// for calucutate tip position
-	m_pBoneList[0].tx = posture.root_pos.p[0];
-	m_pBoneList[0].ty = posture.root_pos.p[1];
-	m_pBoneList[0].tz = posture.root_pos.p[2];
+
 
 	for (int j = 0; j < NUM_BONES_IN_ASF_FILE; j++) {
 		// if the bone has rotational degree of freedom in x direction
@@ -490,6 +487,11 @@ void Skeleton::setPosture(Posture posture) {
 		if (m_pBoneList[j].doftl)
 			m_pBoneList[j].tl = posture.bone_length[j].p[0];
 	}
+
+	// for calucutate tip position
+	m_pBoneList[0].tx = posture.root_pos.p[0];
+	m_pBoneList[0].ty = posture.root_pos.p[1];
+	m_pBoneList[0].tz = posture.root_pos.p[2];
 }
 
 //Set the aspect ratio of each bone 
@@ -645,5 +647,5 @@ void Skeleton::ProcessBone(Bone *ptr, double transToWorld[4][4], double Transfer
 	m_pBoneTipPos[ptr->idx][1] = rr[1];
 	m_pBoneTipPos[ptr->idx][2] = rr[2];
 
-	printf("id: %d  %lf %lf %lf\n", ptr->idx, rr[0], rr[1], rr[2]);
+	//printf("id: %d  %lf %lf %lf\n", ptr->idx, rr[0], rr[1], rr[2]);
 }

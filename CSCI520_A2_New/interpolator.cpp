@@ -6,6 +6,7 @@
 #include "interpolator.h"
 #include "transform.h"
 #include "types.h"
+#include "IKSolver.h"
 
 Interpolator::Interpolator()
 {
@@ -230,9 +231,6 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 		Posture *startPosture = pInputMotion->GetPosture(startKeyframe);
 		Posture *endPosture = pInputMotion->GetPosture(endKeyframe);
 
-		Skeleton  *tt =  pInputMotion->GetSkeleton();
-		tt->setPosture(*startPosture);
-		tt->computeBoneTipPos();
 		// copy start and end keyframe
 		pOutputMotion->SetPosture(startKeyframe, *startPosture);
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
@@ -257,6 +255,30 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 				result = Slerp(start, end, t);
 				Quaternion2Euler(result, ResultEuler);
 				interpolatedPosture.bone_rotation[bone] = ResultEuler;
+			}
+
+			if (m_EnableIKSolver && startKeyframe < 5000) {
+				Skeleton *skeleton = pInputMotion->GetSkeleton();
+				skeleton->setPosture(*(pInputMotion->GetPosture(startKeyframe + frame)));
+				skeleton->computeBoneTipPos();
+				vector v22 = skeleton->getBoneTipPosition(22);
+				vector v5 = skeleton->getBoneTipPosition(5);
+				vector v10 = skeleton->getBoneTipPosition(10);
+				vector v29 = skeleton->getBoneTipPosition(29);
+				// tt->setPosture(interpolatedPosture);
+				// tt->computeBoneTipPos();
+				// vector v2 = tt->getBoneTipPosition(22);
+				// IKSolver k;
+				printf("%d  \n",startKeyframe + frame);
+
+				///if((v1-v2).length() > 0.1)
+				///{
+				///	printf("%d %lf \n",startKeyframe + frame, (v1-v2).length());
+				///}
+				IKSolver::Solve(18, 22, v22, &interpolatedPosture, skeleton, &interpolatedPosture);
+				IKSolver::Solve(2, 5, v5, &interpolatedPosture, skeleton, &interpolatedPosture);
+				IKSolver::Solve(7, 10, v10, &interpolatedPosture, skeleton, &interpolatedPosture);
+				IKSolver::Solve(25, 29, v29, &interpolatedPosture, skeleton, &interpolatedPosture);
 			}
 
 			pOutputMotion->SetPosture(startKeyframe + frame,
@@ -376,6 +398,32 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 				resultQ = DeCasteljauQuaternion(t, q1, a, b, q2);
 				Quaternion2Euler(resultQ, resultEuler);
 				interpolatedPosture.bone_rotation[bone] = resultEuler;
+			}
+
+
+
+			if (m_EnableIKSolver && startKeyframe < 5000) {
+				Skeleton *skeleton = pInputMotion->GetSkeleton();
+				skeleton->setPosture(*(pInputMotion->GetPosture(startKeyframe + frame)));
+				skeleton->computeBoneTipPos();
+				vector v22 = skeleton->getBoneTipPosition(22);
+				vector v5 = skeleton->getBoneTipPosition(5);
+				vector v10 = skeleton->getBoneTipPosition(10);
+				vector v29 = skeleton->getBoneTipPosition(29);
+				// tt->setPosture(interpolatedPosture);
+				// tt->computeBoneTipPos();
+				// vector v2 = tt->getBoneTipPosition(22);
+				// IKSolver k;
+				printf("%d  \n",startKeyframe + frame);
+
+				///if((v1-v2).length() > 0.1)
+				///{
+				///	printf("%d %lf \n",startKeyframe + frame, (v1-v2).length());
+				///}
+				IKSolver::Solve(18, 22, v22, &interpolatedPosture, skeleton, &interpolatedPosture);
+				IKSolver::Solve(2, 5, v5, &interpolatedPosture, skeleton, &interpolatedPosture);
+				IKSolver::Solve(7, 10, v10, &interpolatedPosture, skeleton, &interpolatedPosture);
+				IKSolver::Solve(25, 29, v29, &interpolatedPosture, skeleton, &interpolatedPosture);
 			}
 
 			pOutputMotion->SetPosture(startKeyframe + frame,

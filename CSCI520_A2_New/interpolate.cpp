@@ -18,27 +18,6 @@ Skeleton *pSkeleton_NoDof = NULL;    // skeleton as read from an ASF file (input
 
 int main(int argc, char **argv)
 {
-
-	/*
-	double R[9],R2[3];
-	R2[0] = 12.1;
-	R2[1] = 19.0;
-	R2[2] = -351.7;
-	Interpolator::Euler2Rotation(R2, R);
-	Interpolator::Rotation2Euler(R, R2);
-
-	vector v1(0,0,0);
-	vector v2(0,1,0);
-	vector v3(1,1,0);
-	vector v4(1,0,0);
-	vector iv;
-	iv = Interpolator::DeCasteljauEuler(0.5, v1, v2, v3, v4);
-	iv = Interpolator::DeCasteljauEuler(0.0, v1, v2, v3, v4);
-	iv = Interpolator::DeCasteljauEuler(1.0, v1, v2, v3, v4);
-	iv = Interpolator::DeCasteljauEuler(0.1, v1, v2, v3, v4);
-	*/
-
-
 	if (argc != 7) {
 		printf("Interpolates motion capture data.");
 		printf(
@@ -62,6 +41,7 @@ int main(int argc, char **argv)
 	char *angleRepresentationString = argv[4];
 	char *NString = argv[5];
 	char *outputMotionCaptureFile = argv[6];
+   	bool enableIKSolver = false;
 
 	int N = strtol(NString, NULL, 10);
 	if (N < 0) {
@@ -106,7 +86,18 @@ int main(int argc, char **argv)
 	pSkeleton->enableAllRotationalDOFs();
 
 	InterpolationType interpolationType;
-	if (interpolationTypeString[0] == 'l')
+
+	if (strcmp(interpolationTypeString,"lik")==0)
+	{
+		enableIKSolver = true;
+		interpolationType = LINEAR;
+	}
+	else if (strcmp(interpolationTypeString,"bik")==0)
+	{
+		enableIKSolver = true;
+		interpolationType = BEZIER;
+	}
+	else if (interpolationTypeString[0] == 'l')
 		interpolationType = LINEAR;
 	else if (interpolationTypeString[0] == 'b')
 		interpolationType = BEZIER;
@@ -118,9 +109,14 @@ int main(int argc, char **argv)
 	printf("Interpolation type is: %s\n",
 			(interpolationType == LINEAR) ? "LINEAR" : "BEZIER");
 
+
+
 	AngleRepresentation angleRepresentation;
 	if (angleRepresentationString[0] == 'e')
+	{
 		angleRepresentation = EULER;
+		enableIKSolver = false;
+	}
 	else if (angleRepresentationString[0] == 'q')
 		angleRepresentation = QUATERNION;
 	else {
@@ -130,10 +126,13 @@ int main(int argc, char **argv)
 	}
 	printf("Angle representation for interpolation is: %s\n",
 			(angleRepresentation == EULER) ? "EULER" : "QUATERNION");
+	printf("IK Solver is: %s\n",
+			enableIKSolver ? "ON" : "OFF");
 
 	Interpolator interpolator;
 	interpolator.SetInterpolationType(interpolationType);
 	interpolator.SetAngleRepresentation(angleRepresentation);
+	interpolator.SetIKSolverOnOFF(enableIKSolver);
 
 	printf("Interpolating...\n");
 	Motion *pOutputMotion; // interpolated motion (output)

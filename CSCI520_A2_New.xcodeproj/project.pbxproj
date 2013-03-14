@@ -26,6 +26,9 @@
 		7E27454D16EE9CF6005E232C /* vector.h in Sources */ = {isa = PBXBuildFile; fileRef = 7E27453D16EE9B44005E232C /* vector.h */; };
 		7E27454F16F0773D005E232C /* libarmadillo.3.800.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E27454E16F0773D005E232C /* libarmadillo.3.800.1.dylib */; };
 		7E27455116F1993A005E232C /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E27455016F1993A005E232C /* OpenGL.framework */; };
+		7E27455216F249A5005E232C /* IKSolver.h in Sources */ = {isa = PBXBuildFile; fileRef = ED30780C8C34A75DE9E675AB /* IKSolver.h */; };
+		ED30768B304BEDA344CA7170 /* IKSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ED307AD15AED2DE472F124FF /* IKSolver.cpp */; };
+		ED3076F4E11C10765E7F80E6 /* IKSolver.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = ED30780C8C34A75DE9E675AB /* IKSolver.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -36,6 +39,7 @@
 			dstSubfolderSpec = 0;
 			files = (
 				7E27452816EE9B2F005E232C /* CSCI520_A2_New.1 in CopyFiles */,
+				ED3076F4E11C10765E7F80E6 /* IKSolver.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -62,6 +66,8 @@
 		7E27453D16EE9B44005E232C /* vector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vector.h; sourceTree = "<group>"; };
 		7E27454E16F0773D005E232C /* libarmadillo.3.800.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libarmadillo.3.800.1.dylib; path = "../../../Downloads/armadillo-3.800.1/libarmadillo.3.800.1.dylib"; sourceTree = "<group>"; };
 		7E27455016F1993A005E232C /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		ED30780C8C34A75DE9E675AB /* IKSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IKSolver.h; sourceTree = "<group>"; };
+		ED307AD15AED2DE472F124FF /* IKSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IKSolver.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +121,8 @@
 				7E27453C16EE9B44005E232C /* vector.cpp */,
 				7E27453D16EE9B44005E232C /* vector.h */,
 				7E27452716EE9B2F005E232C /* CSCI520_A2_New.1 */,
+				ED307AD15AED2DE472F124FF /* IKSolver.cpp */,
+				ED30780C8C34A75DE9E675AB /* IKSolver.h */,
 			);
 			path = CSCI520_A2_New;
 			sourceTree = "<group>";
@@ -170,6 +178,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E27455216F249A5005E232C /* IKSolver.h in Sources */,
 				7E27453E16EE9CF6005E232C /* interpolate.cpp in Sources */,
 				7E27453F16EE9CF6005E232C /* interpolator.cpp in Sources */,
 				7E27454016EE9CF6005E232C /* interpolator.h in Sources */,
@@ -186,6 +195,7 @@
 				7E27454B16EE9CF6005E232C /* types.h in Sources */,
 				7E27454C16EE9CF6005E232C /* vector.cpp in Sources */,
 				7E27454D16EE9CF6005E232C /* vector.h in Sources */,
+				ED30768B304BEDA344CA7170 /* IKSolver.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -252,6 +262,8 @@
 		7E27452C16EE9B2F005E232C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_X86_VECTOR_INSTRUCTIONS = avx;
+				GCC_FAST_MATH = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../Downloads/armadillo-3.800.1\"",
@@ -263,6 +275,8 @@
 		7E27452D16EE9B2F005E232C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_X86_VECTOR_INSTRUCTIONS = avx;
+				GCC_FAST_MATH = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../Downloads/armadillo-3.800.1\"",

@@ -130,7 +130,7 @@ public:
 		return m_pBoneTipPos[boneId];
 	}
 
-protected:
+public:
 
 	//parse the skeleton (.ASF) file	
 	int readASFfile(char *asf_filename, double scale);

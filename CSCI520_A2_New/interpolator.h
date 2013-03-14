@@ -41,17 +41,24 @@ public:
 	}
 	;
 
+	//Set whether to use IK solver or not
+	void SetIKSolverOnOFF(bool EnableIkSolver) {
+		m_EnableIKSolver = EnableIkSolver;
+	}
+	;
 	//Create interpolated motion and store it into pOutputMotion (which will also be allocated)
 	void Interpolate(Motion * pInputMotion, Motion ** pOutputMotion, int N);
 
 public:
 	InterpolationType m_InterpolationType; //Interpolation type (Linear, Bezier)
 	AngleRepresentation m_AngleRepresentation; //Angle representation (Euler, Quaternion)
+	bool m_EnableIKSolver;
 
+	int framePos[5000];
 	// conversion routines
 	// angles are given in degrees; assume XYZ Euler angle order
-	static void Rotation2Euler(double R[9], double angles[3]);
-	static void Euler2Rotation(double angles[3], double R[9]);
+	void Rotation2Euler(double R[9], double angles[3]);
+	void Euler2Rotation(double angles[3], double R[9]);
 	void Euler2Quaternion(double angles[3], Quaternion<double> & q);
 	void Quaternion2Euler(Quaternion<double> & q, double angles[3]);
 

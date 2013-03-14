@@ -13,7 +13,7 @@
 #include "vector.h"
 #include "skeleton.h"
 #include "posture.h"
-struct BoneValue
+struct freedomValue
 {
 	int boneId;
 	int x_y_z;
@@ -23,7 +23,7 @@ struct BoneValue
 class IKSolver {
 	public:
 	// goalPosture is the solution, here used to get start position
-	void Solve(int idx_start_bone,int idx_end_bone,vector goalPos,Posture * returnSolution,Skeleton * skeleton,Posture * refPosture);
+	static void Solve(int idx_start_bone,int idx_end_bone,vector goalPos,Posture * returnSolution,Skeleton * skeleton,Posture * refPosture);
 
 };
 
