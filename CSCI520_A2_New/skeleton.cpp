@@ -460,6 +460,11 @@ void Skeleton::setPosture(Posture posture) {
 	m_RootPos[1] = posture.root_pos.p[1];
 	m_RootPos[2] = posture.root_pos.p[2];
 
+	// for calucutate tip position
+	m_pBoneList[0].tx = posture.root_pos.p[0];
+	m_pBoneList[0].ty = posture.root_pos.p[1];
+	m_pBoneList[0].tz = posture.root_pos.p[2];
+
 	for (int j = 0; j < NUM_BONES_IN_ASF_FILE; j++) {
 		// if the bone has rotational degree of freedom in x direction
 		if (m_pBoneList[j].dofrx)
@@ -570,3 +575,75 @@ void Skeleton::GetRotationAngle(double rotationAngle[3]) {
 	rotationAngle[2] = rz;
 }
 
+void Skeleton::computeBoneTipPos()
+{
+	double identityMat[4][4];
+	memset(identityMat,0,sizeof(double)*16);
+	for(int i = 0; i < 4; i++)
+		identityMat[i][i] = 1;
+	Traverse(getRoot(), identityMat);
+}
+
+// Traverse bone tree to caluculate all tip position of the bones
+void Skeleton::Traverse(Bone *ptr, double transToWorld[4][4])
+{
+	if (ptr != 0) {
+		double transToWorldForChild[4][4];
+		ProcessBone(ptr, transToWorld, transToWorldForChild);
+		Traverse(ptr->child, transToWorldForChild);
+		Traverse(ptr->sibling, transToWorld);
+	}
+}
+
+// Caluculate the tip position for each bone and prepare the transfer matrix for his child
+void Skeleton::ProcessBone(Bone *ptr, double transToWorld[4][4], double TransferMatForChild[4][4])
+{
+	//Transform (rotate) from the local coordinate system of this bone to it's parent
+	//This step corresponds to doing: ModelviewMatrix = M_k * (rot_parent_current)
+	double temp[4][4];
+	matrix_transpose(ptr->rot_parent_current, temp);
+	matrix_mult(transToWorld, temp, TransferMatForChild);
+
+	//translate AMC
+	if (ptr->doftz) {
+		translate(temp, 0, 0, double(ptr->tz));
+		matrix_multS(TransferMatForChild, temp);
+	}
+	if (ptr->dofty) {
+		translate(temp, 0, double(ptr->ty), 0);
+		matrix_multS(TransferMatForChild, temp);
+	}
+	if (ptr->doftx) {
+		translate(temp, double(ptr->tx), 0, 0);
+		matrix_multS(TransferMatForChild, temp);
+	}
+
+	//rotate AMC (rarely used)
+	if (ptr->dofrz) {
+		rotationZ(temp, double(ptr->rz));
+		matrix_multS(TransferMatForChild, temp);
+	}
+	if (ptr->dofry) {
+		rotationY(temp, double(ptr->ry));
+		matrix_multS(TransferMatForChild, temp);
+	}
+	if (ptr->dofrx) {
+		rotationX(temp, double(ptr->rx));
+		matrix_multS(TransferMatForChild, temp);
+	}
+
+	//Compute tx, ty, tz : translation from pBone to its child (in local coordinate system of pBone)
+	double tx = ptr->dir[0] * ptr->length;
+	double ty = ptr->dir[1] * ptr->length;
+	double tz = ptr->dir[2] * ptr->length;
+	translate(temp, tx, ty, tz);
+	matrix_multS(TransferMatForChild, temp);
+
+	double rr[3];
+	matrix_transform_affine(TransferMatForChild, 0, 0, 0, rr);
+	m_pBoneTipPos[ptr->idx][0] = rr[0];
+	m_pBoneTipPos[ptr->idx][1] = rr[1];
+	m_pBoneTipPos[ptr->idx][2] = rr[2];
+
+	printf("id: %d  %lf %lf %lf\n", ptr->idx, rr[0], rr[1], rr[2]);
+}

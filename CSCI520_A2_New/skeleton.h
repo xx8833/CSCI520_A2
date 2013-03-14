@@ -14,6 +14,7 @@
 
 #include "posture.h"
 #include "transform.h"
+
 // this structure defines the property of each bone segment, including its connection to other bones,
 // DOF (degrees of freedom), relative orientation and distance to the outboard bone 
 struct Bone {
@@ -57,11 +58,14 @@ public:
 	// The scale parameter adjusts the size of the skeleton. The default value is 0.06 (MOCAP_SCALE).
 	// This creates a human skeleton of 1.7 m in height (approximately)
 	Skeleton(char *asf_filename, double scale);
+
 	~Skeleton();
 
 	//Get root node's address; for accessing bone data
-	Bone* getRoot();
-	static int getRootIndex() {
+	Bone *getRoot();
+
+	static int getRootIndex()
+	{
 		return 0;
 	}
 
@@ -76,51 +80,66 @@ public:
 	void enableAllRotationalDOFs();
 
 	int name2idx(char *);
-	char * idx2name(int);
+
+	char *idx2name(int);
+
 	void GetRootPosGlobal(double rootPosGlobal[3]);
+
 	void GetTranslation(double translation[3]);
+
 	void GetRotationAngle(double rotationAngle[3]);
-	void SetTranslationX(double tx_) {
+
+	void SetTranslationX(double tx_)
+	{
 		tx = tx_;
 	}
-	void SetTranslationY(double ty_) {
+
+	void SetTranslationY(double ty_)
+	{
 		ty = ty_;
 	}
-	void SetTranslationZ(double tz_) {
+
+	void SetTranslationZ(double tz_)
+	{
 		tz = tz_;
 	}
-	void SetRotationAngleX(double rx_) {
+
+	void SetRotationAngleX(double rx_)
+	{
 		rx = rx_;
 	}
-	void SetRotationAngleY(double ry_) {
+
+	void SetRotationAngleY(double ry_)
+	{
 		ry = ry_;
 	}
-	void SetRotationAngleZ(double rz_) {
+
+	void SetRotationAngleZ(double rz_)
+	{
 		rz = rz_;
 	}
 
 	int numBonesInSkel(Bone bone);
+
 	int movBonesInSkel(Bone bone);
-	void computeBoneEndPos()
+
+	void computeBoneTipPos();
+
+	vector getBoneTipPosition(int boneId)
 	{
-		ComputeRotationToParentCoordSystem(m_pBoneList);
-		double identityMat[4][4];
-		memset(identityMat,0,sizeof(double)*16);
-		for(int i = 0; i < 4; i++)
-			identityMat[i][i] = 1;
-		Traverse(m_pRootBone, identityMat);
+		return m_pBoneTipPos[boneId];
 	}
 
 protected:
 
 	//parse the skeleton (.ASF) file	
-	int readASFfile(char* asf_filename, double scale);
+	int readASFfile(char *asf_filename, double scale);
 
 	//This recursive function traverses skeleton hierarchy 
 	//and returns a pointer to the bone with index - bIndex
 	//ptr should be a pointer to the root node 
 	//when this function first called
-	Bone* getBone(Bone *ptr, int bIndex);
+	Bone *getBone(Bone *ptr, int bIndex);
 
 	//This function sets sibling or child for parent bone
 	//If parent bone does not have a child, 
@@ -132,73 +151,15 @@ protected:
 	void RotateBoneDirToLocalCoordSystem();
 
 	void set_bone_shape(Bone *bone);
+
 	void compute_rotation_parent_child(Bone *parent, Bone *child);
+
 	void ComputeRotationToParentCoordSystem(Bone *bone);
 
-	void ProcessBone(Bone *ptr,double transToWorld[4][4],double TransferMatForChild[4][4])
-	{
-		//Transform (rotate) from the local coordinate system of this bone to it's parent
-		//This step corresponds to doing: ModelviewMatrix = M_k * (rot_parent_current)
-		matrix_mult( transToWorld ,  ptr->rot_parent_current , TransferMatForChild);
+	// Caluculate the tip position for each bone and prepare the transfer matrix for his child
+	void ProcessBone(Bone *ptr, double transToWorld[4][4], double TransferMatForChild[4][4]);
+	void Traverse(Bone *ptr, double transToWorld[4][4]);
 
-		double temp[4][4];
-
-		//translate AMC
-		//if(ptr->doftz)
-		//{
-		//	translate(temp,0,0,double(ptr->tz));
-		//	matrix_multS(TransferMatForChild, temp);
-		//}
-		//if(ptr->dofty)
-		//{
-		//	translate(temp,0,double(ptr->ty),0);
-		//	matrix_multS(TransferMatForChild, temp);
-		//}
-		//if(ptr->doftx)
-		//{
-		//	translate(temp,double(ptr->tx),0,0);
-		//	matrix_multS(TransferMatForChild, temp);
-		//}
-
-		//rotate AMC (rarely used)
-		//if(ptr->dofrz)
-		//{
-		//	rotationZ(temp, double(ptr->rz));
-		//	matrix_multS(TransferMatForChild, temp);
-		//}
-		//if(ptr->dofry)
-		//{
-		//	rotationY(temp, double(ptr->ry));
-		//	matrix_multS(TransferMatForChild, temp);
-		//}
-		//if(ptr->dofrx)
-		//{
-		//	rotationX(temp, double(ptr->rx));
-		//	matrix_multS(TransferMatForChild, temp);
-		//}
-
-		//Compute tx, ty, tz : translation from pBone to its child (in local coordinate system of pBone)
-		double tx = ptr->dir[0] * ptr->length;
-		double ty = ptr->dir[1] * ptr->length;
-		double tz = ptr->dir[2] * ptr->length;
-		translate(temp,tx,ty,tz);
-		matrix_multS(TransferMatForChild, temp);
-
-		double rr[3];
-		matrix_transform_affine(TransferMatForChild, 0, 0, 0, rr);
-		printf("id: %d  %lf %lf %lf\n",ptr->idx,rr[0],rr[1],rr[2]);
-	}
-
-	void Traverse(Bone *ptr,double transToWorld[4][4])
-	{
-		if(ptr != 0)
-		{
-			double transToWorldForChild[4][4];
-			ProcessBone(ptr, transToWorld, transToWorldForChild);
-			Traverse(ptr->child, transToWorldForChild);
-			Traverse(ptr->sibling, transToWorld);
-		}
-	}
 	// root position in world coordinate system
 	double m_RootPos[3];
 	double tx, ty, tz;
@@ -209,8 +170,10 @@ protected:
 
 	Bone *m_pRootBone;  // Pointer to the root bone, m_RootBone = &bone[0]
 	Bone m_pBoneList[MAX_BONES_IN_ASF_FILE];   // Array with all skeleton bones
+	vector m_pBoneTipPos[MAX_BONES_IN_ASF_FILE]; // Array of positions of bone tip
+	// call computeBoneTipPos to fill in
 
-	void removeCR(char * str); // removes CR at the end of line
+	void removeCR(char *str); // removes CR at the end of line
 };
 
 #endif

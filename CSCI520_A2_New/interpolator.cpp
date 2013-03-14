@@ -232,7 +232,7 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 
 		Skeleton  *tt =  pInputMotion->GetSkeleton();
 		tt->setPosture(*startPosture);
-		tt->computeBoneEndPos();
+		tt->computeBoneTipPos();
 		// copy start and end keyframe
 		pOutputMotion->SetPosture(startKeyframe, *startPosture);
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);

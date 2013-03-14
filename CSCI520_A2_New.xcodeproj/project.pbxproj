@@ -25,6 +25,7 @@
 		7E27454C16EE9CF6005E232C /* vector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7E27453C16EE9B44005E232C /* vector.cpp */; };
 		7E27454D16EE9CF6005E232C /* vector.h in Sources */ = {isa = PBXBuildFile; fileRef = 7E27453D16EE9B44005E232C /* vector.h */; };
 		7E27454F16F0773D005E232C /* libarmadillo.3.800.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E27454E16F0773D005E232C /* libarmadillo.3.800.1.dylib */; };
+		7E27455116F1993A005E232C /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E27455016F1993A005E232C /* OpenGL.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -60,6 +61,7 @@
 		7E27453C16EE9B44005E232C /* vector.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = vector.cpp; sourceTree = "<group>"; };
 		7E27453D16EE9B44005E232C /* vector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vector.h; sourceTree = "<group>"; };
 		7E27454E16F0773D005E232C /* libarmadillo.3.800.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libarmadillo.3.800.1.dylib; path = "../../../Downloads/armadillo-3.800.1/libarmadillo.3.800.1.dylib"; sourceTree = "<group>"; };
+		7E27455016F1993A005E232C /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E27455116F1993A005E232C /* OpenGL.framework in Frameworks */,
 				7E27454F16F0773D005E232C /* libarmadillo.3.800.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -77,6 +80,7 @@
 		7E27451916EE9B2F005E232C = {
 			isa = PBXGroup;
 			children = (
+				7E27455016F1993A005E232C /* OpenGL.framework */,
 				7E27454E16F0773D005E232C /* libarmadillo.3.800.1.dylib */,
 				7E27452416EE9B2F005E232C /* CSCI520_A2_New */,
 				7E27452316EE9B2F005E232C /* Products */,
