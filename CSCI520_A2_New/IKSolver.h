@@ -13,6 +13,7 @@
 #include "vector.h"
 #include "skeleton.h"
 #include "posture.h"
+
 struct freedomValue
 {
 	int boneId;

@@ -133,6 +133,7 @@ int main(int argc, char **argv)
 	interpolator.SetInterpolationType(interpolationType);
 	interpolator.SetAngleRepresentation(angleRepresentation);
 	interpolator.SetIKSolverOnOFF(enableIKSolver);
+	interpolator.SetTimeUniformKeyframe(N, pInputMotion->GetNumFrames());
 
 	printf("Interpolating...\n");
 	Motion *pOutputMotion; // interpolated motion (output)

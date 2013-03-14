@@ -45,6 +45,12 @@ void Interpolator::Interpolate(Motion *pInputMotion, Motion **pOutputMotion,
 		printf("Error: unknown interpolation / angle representation type.\n");
 		exit(1);
 	}
+
+	// record for graph
+	for(int frame = 1 ; frame <=  1000 ; frame ++)
+	{
+		printf("%d %lf\n",frame,((*pOutputMotion)->GetPosture(frame))->bone_rotation[18][0]);
+	}
 }
 
 void Interpolator::LinearInterpolationEuler(Motion *pInputMotion,
@@ -52,9 +58,9 @@ void Interpolator::LinearInterpolationEuler(Motion *pInputMotion,
 {
 	int inputLength = pInputMotion->GetNumFrames(); // frames are indexed 0, ..., inputLength-1
 
-	int startKeyframe = 0;
-	while (startKeyframe + N + 1 < inputLength) {
-		int endKeyframe = startKeyframe + N + 1;
+	for (int keyFrameID = 1; keyFrameID < num_keyFrames; keyFrameID++) {
+		int startKeyframe = keyFramePos[keyFrameID];
+		int endKeyframe = keyFramePos[keyFrameID + 1];
 
 		Posture *startPosture = pInputMotion->GetPosture(startKeyframe);
 		Posture *endPosture = pInputMotion->GetPosture(endKeyframe);
@@ -64,9 +70,9 @@ void Interpolator::LinearInterpolationEuler(Motion *pInputMotion,
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
 
 		// interpolate in between
-		for (int frame = 1; frame <= N; frame++) {
+		for (int frame = 1; frame <=  endKeyframe - startKeyframe; frame++) {
 			Posture interpolatedPosture;
-			double t = 1.0 * frame / (N + 1);
+			double t = 1.0 * frame / ( endKeyframe - startKeyframe + 1);
 
 			// interpolate root position
 			interpolatedPosture.root_pos = startPosture->root_pos * (1 - t)
@@ -85,7 +91,7 @@ void Interpolator::LinearInterpolationEuler(Motion *pInputMotion,
 		startKeyframe = endKeyframe;
 	}
 
-	for (int frame = startKeyframe + 1; frame < inputLength; frame++)
+	for (int frame = keyFramePos[num_keyFrames] + 1; frame < inputLength; frame++)
 		pOutputMotion->SetPosture(frame, *(pInputMotion->GetPosture(frame)));
 }
 
@@ -125,16 +131,17 @@ void Interpolator::BezierInterpolationEuler(Motion *pInputMotion,
 {
 	int inputLength = pInputMotion->GetNumFrames(); // frames are indexed 0, ..., inputLength-1
 
-	// keyframe ID (n) starts from 1
+	// keyframe ID  starts from 1
 	// frame number starts from 0
 	// frame number 0 ..N.. 31 ..N.. 62 ..
 	// keyframe ID  1       2        3  ..
-	int maxKeyFrameID = inputLength / (N + 1) + 1;
-	if (maxKeyFrameID <= 3)
-		throw "Too less key frames to do Interpolate";
-	for (int keyFrameID = 1; keyFrameID < maxKeyFrameID; keyFrameID++) {
-		int startKeyframe = (keyFrameID - 1) * (N + 1);
-		int endKeyframe = startKeyframe + N + 1;
+	// in non time uniform situation, the interval is different
+	// To get KeyFrame Position, use keyFramePos array
+	if (num_keyFrames <= 3)
+		throw "Too less key frames to do the Interpolation";
+	for (int keyFrameID = 1; keyFrameID < num_keyFrames; keyFrameID++) {
+		int startKeyframe = keyFramePos[keyFrameID];
+		int endKeyframe = keyFramePos[keyFrameID + 1];
 		// p_n,p_(n+1)
 		Posture *startPosture = pInputMotion->GetPosture(startKeyframe);
 		Posture *endPosture = pInputMotion->GetPosture(endKeyframe);
@@ -144,9 +151,9 @@ void Interpolator::BezierInterpolationEuler(Motion *pInputMotion,
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
 
 		// interpolate in between
-		for (int frame = 1; frame <= N; frame++) {
+		for (int frame = 1; frame < endKeyframe - startKeyframe; frame++) {
 			Posture interpolatedPosture;
-			double t = 1.0 * frame / (N + 1);
+			double t = 1.0 * frame / (endKeyframe - startKeyframe + 1);
 
 			// interpolate root position
 			// a_n,b_(n+1)
@@ -156,20 +163,23 @@ void Interpolator::BezierInterpolationEuler(Motion *pInputMotion,
 			p1 = startPosture->root_pos;
 			p2 = endPosture->root_pos;
 
+			// a
 			if (keyFrameID == 1) {
-				p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->root_pos;
+				p3 = pInputMotion->GetPosture(keyFramePos[keyFrameID + 2])->root_pos;
 				a = Lerp(p1, Lerp(p3, p2, 2), 1.0 / 3);
 			}
 			else {
-				p0 = pInputMotion->GetPosture(startKeyframe - N - 1)->root_pos;
+				p0 = pInputMotion->GetPosture(keyFramePos[keyFrameID - 1])->root_pos;
 				// (a_n)_
 				vector a_ = Lerp(Lerp(p0, p1, 2), p2, 0.5);
 				a = Lerp(p1, a_, 1.0 / 3);
 			}
-			if (keyFrameID == maxKeyFrameID - 1)
+
+			// b
+			if (keyFrameID == num_keyFrames - 1)
 				b = Lerp(p2, Lerp(p0, p1, 2), 1.0 / 3);
 			else {
-				p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->root_pos;
+				p3 = pInputMotion->GetPosture(keyFramePos[keyFrameID + 2])->root_pos;
 				// (a_n+1)_
 				vector a_1 = Lerp(Lerp(p1, p2, 2), p3, 0.5);
 				b = Lerp(p2, a_1, -1.0 / 3);
@@ -186,36 +196,37 @@ void Interpolator::BezierInterpolationEuler(Motion *pInputMotion,
 				p1 = startPosture->bone_rotation[bone];
 				p2 = endPosture->bone_rotation[bone];
 
+				// a
 				if (keyFrameID == 1) {
-					p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->bone_rotation[bone];
+					p3 = pInputMotion->GetPosture(keyFramePos[keyFrameID + 2])->bone_rotation[bone];
 					a = Lerp(p1, Lerp(p3, p2, 2), 1.0 / 3);
 				}
 				else {
-					p0 = pInputMotion->GetPosture(startKeyframe - N - 1)->bone_rotation[bone];
+					p0 = pInputMotion->GetPosture(keyFramePos[keyFrameID - 1])->bone_rotation[bone];
 					// (a_n)_
 					vector a_ = Lerp(Lerp(p0, p1, 2), p2, 0.5);
 					a = Lerp(p1, a_, 1.0 / 3);
 				}
-				if (keyFrameID == maxKeyFrameID - 1)
+
+				// b
+				if (keyFrameID == num_keyFrames - 1)
 					b = Lerp(p2, Lerp(p0, p1, 2), 1.0 / 3);
 				else {
-					p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->bone_rotation[bone];
+					p3 = pInputMotion->GetPosture(keyFramePos[keyFrameID + 2])->bone_rotation[bone];
 					// (a_n+1)_
 					vector a_1 = Lerp(Lerp(p1, p2, 2), p3, 0.5);
 					b = Lerp(p2, a_1, -1.0 / 3);
 				}
 				interpolatedPosture.bone_rotation[bone] = DeCasteljauEuler(t, p1, a, b, p2);
 
-
 			}
-
 			pOutputMotion->SetPosture(startKeyframe + frame,
 					interpolatedPosture);
 		}
 
 	}
 
-	for (int frame = (maxKeyFrameID - 1) * (N + 1) + 1; frame < inputLength; frame++)
+	for (int frame = keyFramePos[num_keyFrames] + 1; frame < inputLength; frame++)
 		pOutputMotion->SetPosture(frame, *(pInputMotion->GetPosture(frame)));
 }
 
@@ -224,9 +235,9 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 {
 	int inputLength = pInputMotion->GetNumFrames(); // frames are indexed 0, ..., inputLength-1
 
-	int startKeyframe = 0;
-	while (startKeyframe + N + 1 < inputLength) {
-		int endKeyframe = startKeyframe + N + 1;
+	for (int keyFrameID = 1; keyFrameID < num_keyFrames; keyFrameID++) {
+		int startKeyframe = keyFramePos[keyFrameID];
+		int endKeyframe = keyFramePos[keyFrameID + 1];
 
 		Posture *startPosture = pInputMotion->GetPosture(startKeyframe);
 		Posture *endPosture = pInputMotion->GetPosture(endKeyframe);
@@ -236,9 +247,9 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
 
 		// interpolate in between
-		for (int frame = 1; frame <= N; frame++) {
+		for (int frame = 1; frame <= endKeyframe - startKeyframe; frame++) {
 			Posture interpolatedPosture;
-			double t = 1.0 * frame / (N + 1);
+			double t = 1.0 * frame / (endKeyframe - startKeyframe + 1);
 
 			// interpolate root position
 			interpolatedPosture.root_pos = startPosture->root_pos * (1 - t)
@@ -257,7 +268,9 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 				interpolatedPosture.bone_rotation[bone] = ResultEuler;
 			}
 
-			if (m_EnableIKSolver && startKeyframe < 5000) {
+			if (m_EnableIKSolver) {
+				// Get the actual hands and feet position
+				// 5,10 feet 22,29 hands
 				Skeleton *skeleton = pInputMotion->GetSkeleton();
 				skeleton->setPosture(*(pInputMotion->GetPosture(startKeyframe + frame)));
 				skeleton->computeBoneTipPos();
@@ -265,16 +278,7 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 				vector v5 = skeleton->getBoneTipPosition(5);
 				vector v10 = skeleton->getBoneTipPosition(10);
 				vector v29 = skeleton->getBoneTipPosition(29);
-				// tt->setPosture(interpolatedPosture);
-				// tt->computeBoneTipPos();
-				// vector v2 = tt->getBoneTipPosition(22);
-				// IKSolver k;
-				printf("%d  \n",startKeyframe + frame);
-
-				///if((v1-v2).length() > 0.1)
-				///{
-				///	printf("%d %lf \n",startKeyframe + frame, (v1-v2).length());
-				///}
+				// Adjust current angle to reach these position
 				IKSolver::Solve(18, 22, v22, &interpolatedPosture, skeleton, &interpolatedPosture);
 				IKSolver::Solve(2, 5, v5, &interpolatedPosture, skeleton, &interpolatedPosture);
 				IKSolver::Solve(7, 10, v10, &interpolatedPosture, skeleton, &interpolatedPosture);
@@ -288,7 +292,7 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 		startKeyframe = endKeyframe;
 	}
 
-	for (int frame = startKeyframe + 1; frame < inputLength; frame++)
+	for (int frame = keyFramePos[num_keyFrames] + 1; frame < inputLength; frame++)
 		pOutputMotion->SetPosture(frame, *(pInputMotion->GetPosture(frame)));
 }
 
@@ -301,12 +305,12 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 	// frame number starts from 0
 	// frame number 0 ..N.. 31 ..N.. 62 ..
 	// keyframe ID  1       2        3  ..
-	int maxKeyFrameID = inputLength / (N + 1) + 1;
-	if (maxKeyFrameID <= 3)
+	if (num_keyFrames <= 3)
 		throw "Too less key frames to do Interpolate";
-	for (int keyFrameID = 1; keyFrameID < maxKeyFrameID; keyFrameID++) {
-		int startKeyframe = (keyFrameID - 1) * (N + 1);
-		int endKeyframe = startKeyframe + N + 1;
+	for (int keyFrameID = 1; keyFrameID < num_keyFrames; keyFrameID++) {
+
+		int startKeyframe = keyFramePos[keyFrameID];
+		int endKeyframe = keyFramePos[keyFrameID + 1];
 		// q_n
 		Posture *startPosture = pInputMotion->GetPosture(startKeyframe);
 		// q_(n+1)
@@ -317,9 +321,9 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
 
 		// interpolate in between
-		for (int frame = 1; frame <= N; frame++) {
+		for (int frame = 1; frame <= endKeyframe - startKeyframe; frame++) {
 			Posture interpolatedPosture;
-			double t = 1.0 * frame / (N + 1);
+			double t = 1.0 * frame / (endKeyframe - startKeyframe + 1);
 
 			// interpolate root position
 			// a_n,b_(n+1)
@@ -331,20 +335,20 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 
 			// special case for a1
 			if (keyFrameID == 1) {
-				p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->root_pos;
+				p3 = pInputMotion->GetPosture(keyFramePos[keyFrameID + 2])->root_pos;
 				a = Lerp(p1, Lerp(p3, p2, 2), 1.0 / 3);
 			}
 			else {
-				p0 = pInputMotion->GetPosture(startKeyframe - N - 1)->root_pos;
+				p0 = pInputMotion->GetPosture(keyFramePos[keyFrameID - 1])->root_pos;
 				// (a_n)_
 				vector a_ = Lerp(Lerp(p0, p1, 2), p2, 0.5);
 				a = Lerp(p1, a_, 1.0 / 3);
 			}
 			// special case for bn
-			if (keyFrameID == maxKeyFrameID - 1)
+			if (keyFrameID == num_keyFrames - 1)
 				b = Lerp(p2, Lerp(p0, p1, 2), 1.0 / 3);
 			else {
-				p3 = pInputMotion->GetPosture(endKeyframe + N + 1)->root_pos;
+				p3 = pInputMotion->GetPosture(keyFramePos[keyFrameID + 2])->root_pos;
 				// (a_n+1)_
 				vector a_1 = Lerp(Lerp(p1, p2, 2), p3, 0.5);
 				b = Lerp(p2, a_1, -1.0 / 3);
@@ -367,13 +371,13 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 
 				// special case for a1
 				if (keyFrameID == 1) {
-					pInputMotion->GetPosture(endKeyframe + N + 1)->bone_rotation[bone].getValue(e3);
+					pInputMotion->GetPosture(keyFramePos[keyFrameID + 2])->bone_rotation[bone].getValue(e3);
 					Euler2Quaternion(e3, q3);
 					Quaternion<double> temp = Double(q3, q2);
 					a = Slerp(q1, temp, 1.0 / 3);
 				}
 				else {
-					pInputMotion->GetPosture(startKeyframe - N - 1)->bone_rotation[bone].getValue(e0);
+					pInputMotion->GetPosture(keyFramePos[keyFrameID - 1])->bone_rotation[bone].getValue(e0);
 					Euler2Quaternion(e0, q0);
 					// (a_n)_
 					Quaternion<double> temp = Double(q0, q1);
@@ -382,12 +386,12 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 				}
 
 				// special case for bn
-				if (keyFrameID == maxKeyFrameID - 1) {
+				if (keyFrameID == num_keyFrames - 1) {
 					Quaternion<double> temp = Slerp(q0, q1, 2);
 					b = Slerp(q2, temp, 1.0 / 3);
 				}
 				else {
-					pInputMotion->GetPosture(endKeyframe + N + 1)->bone_rotation[bone].getValue(e3);
+					pInputMotion->GetPosture(keyFramePos[keyFrameID + 2])->bone_rotation[bone].getValue(e3);
 					Euler2Quaternion(e3, q3);
 					// (a_n+1)_
 					Quaternion<double> temp = Double(q1, q2);
@@ -400,9 +404,9 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 				interpolatedPosture.bone_rotation[bone] = resultEuler;
 			}
 
-
-
-			if (m_EnableIKSolver && startKeyframe < 5000) {
+			if (m_EnableIKSolver) {
+				// Get the actual hands and feet position
+				// 5,10 feet 22,29 hands
 				Skeleton *skeleton = pInputMotion->GetSkeleton();
 				skeleton->setPosture(*(pInputMotion->GetPosture(startKeyframe + frame)));
 				skeleton->computeBoneTipPos();
@@ -410,16 +414,16 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 				vector v5 = skeleton->getBoneTipPosition(5);
 				vector v10 = skeleton->getBoneTipPosition(10);
 				vector v29 = skeleton->getBoneTipPosition(29);
+				// Debug 
 				// tt->setPosture(interpolatedPosture);
 				// tt->computeBoneTipPos();
 				// vector v2 = tt->getBoneTipPosition(22);
 				// IKSolver k;
-				printf("%d  \n",startKeyframe + frame);
-
 				///if((v1-v2).length() > 0.1)
 				///{
 				///	printf("%d %lf \n",startKeyframe + frame, (v1-v2).length());
 				///}
+				// Adjust current angle to reach these position
 				IKSolver::Solve(18, 22, v22, &interpolatedPosture, skeleton, &interpolatedPosture);
 				IKSolver::Solve(2, 5, v5, &interpolatedPosture, skeleton, &interpolatedPosture);
 				IKSolver::Solve(7, 10, v10, &interpolatedPosture, skeleton, &interpolatedPosture);
@@ -432,7 +436,7 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 
 	}
 
-	for (int frame = (maxKeyFrameID - 1) * (N + 1) + 1; frame < inputLength; frame++)
+	for (int frame = keyFramePos[num_keyFrames]; frame < inputLength; frame++)
 		pOutputMotion->SetPosture(frame, *(pInputMotion->GetPosture(frame)));
 }
 
@@ -504,3 +508,15 @@ Quaternion<double> Interpolator::DeCasteljauQuaternion(double t,
 	return Slerp(temp1, temp2, t);
 }
 
+void Interpolator::SetTimeUniformKeyframe(int interval,int length)
+{
+	int keyFrameID,currentKeyFramePos = 0;
+	for(keyFrameID = 1; ; keyFrameID++)
+	{
+		keyFramePos[keyFrameID] = currentKeyFramePos;
+		currentKeyFramePos += interval + 1;
+		if(currentKeyFramePos >= length)
+			break;
+	}
+	num_keyFrames = keyFrameID;
+}

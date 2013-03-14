@@ -1,9 +1,6 @@
 //
 // Created by zhiyixu on 3/14/13.
 //
-//
-//
-
 
 #include "IKSolver.h"
 #include </Users/zhiyixu/Downloads/armadillo-3.800.1/include/armadillo>
@@ -16,6 +13,7 @@ extern Skeleton *pSkeleton_NoDof;
 // Calculate joint degrees
 // from bone idx_start_bone to idx_end_bone, the desired position of idx_end_bone tip is goalPos
 // return the solution to returnSolution, start the iteration from refPosture
+// Reference: Computer Animation Algorithms & Techniques 3rd Rick Parent
 void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Posture *returnSolution, Skeleton *skeleton, Posture *refPosture)
 {
 	// degree difference when evaluating derivative
@@ -52,6 +50,8 @@ void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Postu
 	// iteratively improve the solution
 	// V = J * theta
 	Posture iter = *refPosture;
+	Posture bestSolution;
+	double bestDistance = 1e3;
 	mat J = mat(3, idx_input);
 	mat V = mat(3, 1);
 	mat theta = mat(idx_input, 1);
@@ -61,6 +61,7 @@ void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Postu
 		// prevent iterating too many times. Mostly it is caused by unreachable position.
 		if (times > 3000)
 		{
+			iter = bestSolution;
 			printf("Not Found\n");
 			break;
 		}
@@ -73,6 +74,11 @@ void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Postu
 		// Success
 		if (diff.length() < 0.03)
 			break;
+		if( bestDistance >diff.length() )
+		{
+			bestDistance = diff.length();
+			bestSolution = iter;
+		}
 
 		V(0, 0) = diff.p[0];
 		V(1, 0) = diff.p[1];

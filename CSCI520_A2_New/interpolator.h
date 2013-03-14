@@ -49,12 +49,15 @@ public:
 	//Create interpolated motion and store it into pOutputMotion (which will also be allocated)
 	void Interpolate(Motion * pInputMotion, Motion ** pOutputMotion, int N);
 
-public:
+	// set time uniform keyframe
+	void SetTimeUniformKeyframe(int interval,int length);
+private:
 	InterpolationType m_InterpolationType; //Interpolation type (Linear, Bezier)
 	AngleRepresentation m_AngleRepresentation; //Angle representation (Euler, Quaternion)
 	bool m_EnableIKSolver;
 
-	int framePos[5000];
+	int keyFramePos[10000];
+	int num_keyFrames;
 	// conversion routines
 	// angles are given in degrees; assume XYZ Euler angle order
 	void Rotation2Euler(double R[9], double angles[3]);
