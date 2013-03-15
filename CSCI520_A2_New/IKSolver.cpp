@@ -17,7 +17,13 @@ extern Skeleton *pSkeleton_NoDof;
 void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Posture *returnSolution, Skeleton *skeleton, Posture *refPosture)
 {
 	// degree difference when evaluating derivative
-	const double delta = 0.005;
+	const double delta = 0.01;
+	// the step size of euler method
+	const double eulerStep = 0.05;
+	// max iterative times
+	const int maxIterTimes = 300;
+	// allowed error distance
+	const double acceptedError = 0.025;
 	// record all freedom degree
 	freedomValue input[100];
 	int idx_input = 0;
@@ -43,15 +49,14 @@ void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Postu
 		}
 		ptr = ptr->child;
 	}
-	while
-			(ptr != NULL);
+	while(ptr != NULL);
 	input[idx_input].boneId = -1;
 
 	// iteratively improve the solution
 	// V = J * theta
 	Posture iter = *refPosture;
 	Posture bestSolution;
-	double bestDistance = 1e3;
+	double bestDistance = 1e4;
 	mat J = mat(3, idx_input);
 	mat V = mat(3, 1);
 	mat theta = mat(idx_input, 1);
@@ -59,7 +64,7 @@ void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Postu
 	int times = 0;
 	while (true) {
 		// prevent iterating too many times. Mostly it is caused by unreachable position.
-		if (times > 3000)
+		if (times > maxIterTimes)
 		{
 			iter = bestSolution;
 			printf("Not Found\n");
@@ -72,9 +77,12 @@ void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Postu
 		vector originalPosition = skeleton->getBoneTipPosition(idx_end_bone);
 		vector diff = goalPos - originalPosition;
 		// Success
-		if (diff.length() < 0.03)
+		if (diff.length() < acceptedError)
+		{
+			printf("%d\n",times);
 			break;
-		if( bestDistance >diff.length() )
+		}
+		if( bestDistance > diff.length() )
 		{
 			bestDistance = diff.length();
 			bestSolution = iter;
@@ -106,9 +114,8 @@ void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Postu
 		theta = pinv(J) * V;
 
 		// use Euler Method to update theta
-		double step = 0.003;
 		for (int i = 0; i < idx_input; i++) {
-			iter.bone_rotation[input[i].boneId].p[input[i].x_y_z-1] += theta(i, 0) * step;
+			iter.bone_rotation[input[i].boneId].p[input[i].x_y_z-1] += theta(i, 0) * eulerStep;
 		}
 	}
 

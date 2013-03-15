@@ -407,6 +407,7 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 			if (m_EnableIKSolver) {
 				// Get the actual hands and feet position
 				// 5,10 feet 22,29 hands
+				interpolatedPosture.root_pos = pInputMotion->GetPosture(startKeyframe + frame)->root_pos;
 				Skeleton *skeleton = pInputMotion->GetSkeleton();
 				skeleton->setPosture(*(pInputMotion->GetPosture(startKeyframe + frame)));
 				skeleton->computeBoneTipPos();
