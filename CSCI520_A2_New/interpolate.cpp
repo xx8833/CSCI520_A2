@@ -14,13 +14,10 @@
 #include "motion.h"
 #include </Users/zhiyixu/Downloads/armadillo-3.800.1/include/armadillo>
 
+Skeleton *pSkeleton_NoDof = NULL;    // skeleton as read from an ASF file (input)
+
 int main(int argc, char **argv)
 {
-	arma::mat A = arma::randu < arma::mat > (4, 5);
-	arma::mat B = arma::randu < arma::mat > (4, 5);
-	A(1, 2) = 87;
-	std::cout << A * B.t() << std::endl;
-	double tr = A(1, 2);
 
 	/*
 	double R[9],R2[3];
@@ -74,6 +71,7 @@ int main(int argc, char **argv)
 	printf("N=%d\n", N);
 
 	Skeleton *pSkeleton = NULL;    // skeleton as read from an ASF file (input)
+
 	Motion *pInputMotion = NULL; // motion as read from an AMC file (input)
 
 	printf("Loading skeleton from %s...\n", inputSkeletonFile);
@@ -84,6 +82,16 @@ int main(int argc, char **argv)
 				inputSkeletonFile, exceptionCode);
 		exit(1);
 	}
+
+	printf("Loading skeleton from %s...\n", inputSkeletonFile);
+	try {
+		pSkeleton_NoDof = new Skeleton(inputSkeletonFile, MOCAP_SCALE);
+	} catch (int exceptionCode) {
+		printf("Error: failed to load skeleton from %s. Code: %d\n",
+				inputSkeletonFile, exceptionCode);
+		exit(1);
+	}
+
 
 	printf("Loading input motion from %s...\n", inputMotionCaptureFile);
 	try {
