@@ -150,6 +150,7 @@ void matrix_mult(double a[][4], double b[][4], double c[][4]) {
 		}
 }
 
+// a = a * b
 void matrix_multS(double a[][4], double b[][4]) {
 	double copy[4][4];
 	memcpy(copy,a,sizeof(double)*16);

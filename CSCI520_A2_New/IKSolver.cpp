@@ -3,7 +3,7 @@
 //
 
 #include "IKSolver.h"
-#include </Users/zhiyixu/Downloads/armadillo-3.800.1/include/armadillo>
+#include "armadillo"
 
 using namespace arma;
 
@@ -61,27 +61,29 @@ void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Postu
 	mat V = mat(3, 1);
 	mat theta = mat(idx_input, 1);
 
+	// run the euler iteration
 	int times = 0;
 	while (true) {
 		// prevent iterating too many times. Mostly it is caused by unreachable position.
 		if (times > maxIterTimes)
 		{
 			iter = bestSolution;
-			printf("Not Found\n");
+			// printf("Not Found\n");
 			break;
 		}
 		times++;
-		Posture postureCopy = iter;
-		skeleton->setPosture(postureCopy);
+		Posture currentPosture = iter;
+		skeleton->setPosture(currentPosture);
 		skeleton->computeBoneTipPos();
-		vector originalPosition = skeleton->getBoneTipPosition(idx_end_bone);
-		vector diff = goalPos - originalPosition;
+		vector originalTipPosition = skeleton->getBoneTipPosition(idx_end_bone);
+		vector diff = goalPos - originalTipPosition;
 		// Success
 		if (diff.length() < acceptedError)
 		{
-			printf("%d\n",times);
+			// printf("%d\n",times);
 			break;
 		}
+		// record best solution so far in case the destination is unreachable and then return the best known solution
 		if( bestDistance > diff.length() )
 		{
 			bestDistance = diff.length();
@@ -94,17 +96,17 @@ void IKSolver::Solve(int idx_start_bone, int idx_end_bone, vector goalPos, Postu
 
 		// Calculate the Jacobie Matrix
 		for (int i = 0; i < idx_input; i++) {
-			postureCopy = iter;
+			currentPosture = iter;
 			if (input[i].x_y_z == 1)
-				postureCopy.bone_rotation[input[i].boneId].p[0] += delta;
+				currentPosture.bone_rotation[input[i].boneId].p[0] += delta;
 			if (input[i].x_y_z == 2)
-				postureCopy.bone_rotation[input[i].boneId].p[1] += delta;
+				currentPosture.bone_rotation[input[i].boneId].p[1] += delta;
 			if (input[i].x_y_z == 3)
-				postureCopy.bone_rotation[input[i].boneId].p[2] += delta;
-			skeleton->setPosture(postureCopy);
+				currentPosture.bone_rotation[input[i].boneId].p[2] += delta;
+			skeleton->setPosture(currentPosture);
 			skeleton->computeBoneTipPos();
 			vector newPosition = skeleton->getBoneTipPosition(idx_end_bone);
-			vector diffV = newPosition - originalPosition;
+			vector diffV = newPosition - originalTipPosition;
 			J(0, i) = diffV.p[0] / delta;
 			J(1, i) = diffV.p[1] / delta;
 			J(2, i) = diffV.p[2] / delta;

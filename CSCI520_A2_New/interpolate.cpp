@@ -26,11 +26,15 @@ int main(int argc, char **argv)
 		printf("  interpolation method:\n");
 		printf("    l: linear\n");
 		printf("    b: Bezier\n");
+		printf("    lik: linear with IK (only works with quaternions)\n");
+		printf("    bik: Bezier with IK (only works with quaternions)\n");
 		printf("  angle representation for interpolation:\n");
 		printf("    e: Euler angles\n");
 		printf("    q: quaternions\n");
-		printf("  N: number of skipped frames\n");
+		printf("  N: number of skipped frames or a file contains the position of keyframes, the file name must ends with .txt\n");
 		printf("Example: %s skeleton.asf motion.amc l e 5 outputMotion.amc\n",
+				argv[0]);
+		printf("Example: %s skeleton.asf motion.amc bik q keyFrame.txt outputMotion.amc\n",
 				argv[0]);
 		return -1;
 	}
@@ -41,14 +45,7 @@ int main(int argc, char **argv)
 	char *angleRepresentationString = argv[4];
 	char *NString = argv[5];
 	char *outputMotionCaptureFile = argv[6];
-   	bool enableIKSolver = false;
-
-	int N = strtol(NString, NULL, 10);
-	if (N < 0) {
-		printf("Error: invalid N value (%d).\n", N);
-		exit(1);
-	}
-	printf("N=%d\n", N);
+	bool enableIKSolver = false;
 
 	Skeleton *pSkeleton = NULL;    // skeleton as read from an ASF file (input)
 
@@ -63,15 +60,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	printf("Loading skeleton from %s...\n", inputSkeletonFile);
-	try {
-		pSkeleton_NoDof = new Skeleton(inputSkeletonFile, MOCAP_SCALE);
-	} catch (int exceptionCode) {
-		printf("Error: failed to load skeleton from %s. Code: %d\n",
-				inputSkeletonFile, exceptionCode);
-		exit(1);
-	}
-
+	// load a copy of original skeleton to store degree of freedom info for IK Solver
+	pSkeleton_NoDof = new Skeleton(inputSkeletonFile, MOCAP_SCALE);
 
 	printf("Loading input motion from %s...\n", inputMotionCaptureFile);
 	try {
@@ -87,13 +77,11 @@ int main(int argc, char **argv)
 
 	InterpolationType interpolationType;
 
-	if (strcmp(interpolationTypeString,"lik")==0)
-	{
+	if (strcmp(interpolationTypeString, "lik") == 0) {
 		enableIKSolver = true;
 		interpolationType = LINEAR;
 	}
-	else if (strcmp(interpolationTypeString,"bik")==0)
-	{
+	else if (strcmp(interpolationTypeString, "bik") == 0) {
 		enableIKSolver = true;
 		interpolationType = BEZIER;
 	}
@@ -110,10 +98,8 @@ int main(int argc, char **argv)
 			(interpolationType == LINEAR) ? "LINEAR" : "BEZIER");
 
 
-
 	AngleRepresentation angleRepresentation;
-	if (angleRepresentationString[0] == 'e')
-	{
+	if (angleRepresentationString[0] == 'e') {
 		angleRepresentation = EULER;
 		enableIKSolver = false;
 	}
@@ -133,7 +119,42 @@ int main(int argc, char **argv)
 	interpolator.SetInterpolationType(interpolationType);
 	interpolator.SetAngleRepresentation(angleRepresentation);
 	interpolator.SetIKSolverOnOFF(enableIKSolver);
-	interpolator.SetTimeUniformKeyframe(N, pInputMotion->GetNumFrames());
+
+	// generate non time uniform key frame position
+	// int keyFrames = 0;
+	// for (int i = 0; i < 3000; i++) {
+	//	if (keyFrames >= pInputMotion->GetNumFrames())
+	//		break;
+	//	printf("%d\n", keyFrames);
+	//	keyFrames += (i % 2 == 0) ? 21 : 31;
+	// }
+
+	int N = strtol(NString, NULL, 10);
+	if (N <= 0) {
+		if (strcmp(NString, "0") == 0) {
+			// no interpolation
+			printf("N=%d\n", N);
+			interpolator.SetTimeUniformKeyframe(N, pInputMotion->GetNumFrames());
+		}
+		else {
+			// read key frame position from a file
+			printf("Loading keyFrame position from %s...\n", NString);
+			std::ifstream file(NString, std::ios::in);
+			if (file.fail()) {
+				printf("Error: failed to load keyFrame position from %s.", NString);
+				exit(1);
+			}
+			int pos;
+			while (file >> pos) {
+				interpolator.AddNextKeyframePos(pos);
+			}
+		}
+	}
+	else {
+		// time uniform interpolation
+		printf("N=%d\n", N);
+		interpolator.SetTimeUniformKeyframe(N, pInputMotion->GetNumFrames());
+	}
 
 	printf("Interpolating...\n");
 	Motion *pOutputMotion; // interpolated motion (output)

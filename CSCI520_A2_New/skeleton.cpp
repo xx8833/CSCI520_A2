@@ -641,11 +641,12 @@ void Skeleton::ProcessBone(Bone *ptr, double transToWorld[4][4], double Transfer
 	translate(temp, tx, ty, tz);
 	matrix_multS(TransferMatForChild, temp);
 
-	double rr[3];
-	matrix_transform_affine(TransferMatForChild, 0, 0, 0, rr);
-	m_pBoneTipPos[ptr->idx][0] = rr[0];
-	m_pBoneTipPos[ptr->idx][1] = rr[1];
-	m_pBoneTipPos[ptr->idx][2] = rr[2];
+	//Calculate tip position
+	double tip[3];
+	matrix_transform_affine(TransferMatForChild, 0, 0, 0, tip);
+	m_pBoneTipPos[ptr->idx][0] = tip[0];
+	m_pBoneTipPos[ptr->idx][1] = tip[1];
+	m_pBoneTipPos[ptr->idx][2] = tip[2];
 
 	//printf("id: %d  %lf %lf %lf\n", ptr->idx, rr[0], rr[1], rr[2]);
 }

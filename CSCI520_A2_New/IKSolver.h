@@ -17,13 +17,14 @@
 struct freedomValue
 {
 	int boneId;
+	// which axis this value describe
+	// 1 : x, 2 : y, 3 : z
 	int x_y_z;
 	double value;
 };
 
 class IKSolver {
 	public:
-	// goalPosture is the solution, here used to get start position
 	static void Solve(int idx_start_bone,int idx_end_bone,vector goalPos,Posture * returnSolution,Skeleton * skeleton,Posture * refPosture);
 
 };

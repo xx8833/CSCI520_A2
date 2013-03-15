@@ -14,8 +14,6 @@
 #include "quaternion.h"
 #include <iostream>
 
-
-
 enum InterpolationType {
 	LINEAR = 0, BEZIER = 1
 };
@@ -51,6 +49,9 @@ public:
 
 	// set time uniform keyframe
 	void SetTimeUniformKeyframe(int interval,int length);
+
+	// set keyframe position
+	void AddNextKeyframePos(int keyFramePos);
 private:
 	InterpolationType m_InterpolationType; //Interpolation type (Linear, Bezier)
 	AngleRepresentation m_AngleRepresentation; //Angle representation (Euler, Quaternion)
