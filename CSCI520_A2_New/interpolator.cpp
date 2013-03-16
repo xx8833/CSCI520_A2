@@ -78,9 +78,9 @@ void Interpolator::LinearInterpolationEuler(Motion *pInputMotion,
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
 
 		// interpolate in between
-		for (int frame = 1; frame <= endKeyframe - startKeyframe; frame++) {
+		for (int frame = 1; frame <= endKeyframe - startKeyframe - 1; frame++) {
 			Posture interpolatedPosture;
-			double t = 1.0 * frame / (endKeyframe - startKeyframe + 1);
+			double t = 1.0 * frame / (endKeyframe - startKeyframe );
 
 			// interpolate root position
 			interpolatedPosture.root_pos = startPosture->root_pos * (1 - t)
@@ -127,9 +127,9 @@ void Interpolator::BezierInterpolationEuler(Motion *pInputMotion,
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
 
 		// interpolate in between
-		for (int frame = 1; frame < endKeyframe - startKeyframe; frame++) {
+		for (int frame = 1; frame < endKeyframe - startKeyframe - 1; frame++) {
 			Posture interpolatedPosture;
-			double t = 1.0 * frame / (endKeyframe - startKeyframe + 1);
+			double t = 1.0 * frame / (endKeyframe - startKeyframe);
 
 			// interpolate root position
 			// a_n,b_(n+1)
@@ -233,9 +233,9 @@ void Interpolator::LinearInterpolationQuaternion(Motion *pInputMotion,
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
 
 		// interpolate in between
-		for (int frame = 1; frame <= endKeyframe - startKeyframe; frame++) {
+		for (int frame = 1; frame <= endKeyframe - startKeyframe - 1; frame++) {
 			Posture interpolatedPosture;
-			double t = 1.0 * frame / (endKeyframe - startKeyframe + 1);
+			double t = 1.0 * frame / (endKeyframe - startKeyframe);
 
 			// interpolate root position
 			interpolatedPosture.root_pos = startPosture->root_pos * (1 - t)
@@ -310,9 +310,9 @@ void Interpolator::BezierInterpolationQuaternion(Motion *pInputMotion,
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
 
 		// interpolate in between
-		for (int frame = 1; frame <= endKeyframe - startKeyframe; frame++) {
+		for (int frame = 1; frame <= endKeyframe - startKeyframe - 1; frame++) {
 			Posture interpolatedPosture;
-			double t = 1.0 * frame / (endKeyframe - startKeyframe + 1);
+			double t = 1.0 * frame / (endKeyframe - startKeyframe);
 
 			// interpolate root position
 			// a_n,b_(n+1)
