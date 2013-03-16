@@ -49,10 +49,10 @@ void Interpolator::Interpolate(Motion *pInputMotion, Motion **pOutputMotion,
 	}
 
 	// record for drawing graph
-	// for(int frame = 1 ; frame <=  1000 ; frame ++)
-	// {
-	// 	 printf("%d %lf\n",frame,((*pOutputMotion)->GetPosture(frame))->bone_rotation[18][0]);
-	// }
+	for(int frame = 1 ; frame <=  1000 ; frame ++)
+	{
+		 printf("%d %lf\n",frame,((*pOutputMotion)->GetPosture(frame))->bone_rotation[18][0]);
+	}
 }
 
 void Interpolator::LinearInterpolationEuler(Motion *pInputMotion,
@@ -127,7 +127,7 @@ void Interpolator::BezierInterpolationEuler(Motion *pInputMotion,
 		pOutputMotion->SetPosture(endKeyframe, *endPosture);
 
 		// interpolate in between
-		for (int frame = 1; frame < endKeyframe - startKeyframe - 1; frame++) {
+		for (int frame = 1; frame <= endKeyframe - startKeyframe - 1; frame++) {
 			Posture interpolatedPosture;
 			double t = 1.0 * frame / (endKeyframe - startKeyframe);
 
